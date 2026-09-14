@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | DineEase Table Reservations</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        body {
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        .admin-nav {
+            background: #1c1917;
+            padding: 16px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .admin-nav .logo {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fb923c;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-nav-links {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .admin-nav-links a, .admin-nav-links button {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .admin-nav-links a:hover, .admin-nav-links button:hover {
+            color: #fb923c;
+        }
+
+        .btn-book-nav {
+            background: #b45309 !important;
+            color: white !important;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+        .btn-book-nav:hover {
+            background: #92400e !important;
+        }
+
+        .admin-container {
+            max-width: 1400px;
+            margin: 25px auto;
+            padding: 0 4%;
+        }
+
+        /* Top Header */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .admin-header h1 {
+            font-size: 28px;
+            color: #0f172a;
+        }
+
+        .db-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #dcfce7;
+            color: #166534;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid #bbf7d0;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+        }
+
+        /* 4 Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat-box {
+            background: white;
+            border-radius: 16px;
+            padding: 22px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .icon-orange { background: #ffedd5; color: #b45309; }
+        .icon-green { background: #dcfce7; color: #15803d; }
+        .icon-blue { background: #e0f2fe; color: #0369a1; }
+        .icon-purple { background: #f3e8ff; color: #7e22ce; }
+
+        .stat-details h3 {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 2px;
+        }
+
+        .stat-details p {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Card Panel */
+        .card-panel {
+            background: white;
+            border-radius: 18px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            padding: 24px;
+            margin-bottom: 30px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Search & Filter Toolbar */
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar input, .toolbar select {
+            padding: 9px 13px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            background: #f8fafc;
+        }
+
+        .toolbar input:focus, .toolbar select:focus {
+            border-color: #b45309;
+            background: white;
+        }
+
+        .btn-refresh {
+            padding: 9px 18px;
+            background: #b45309;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-refresh:hover {
+            background: #92400e;
+        }
+
+        /* Reservations Data Table */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            padding: 13px 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .data-table td {
+            padding: 13px 15px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        .data-table tr:hover td {
+            background: #fffaf5;
+        }
+
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: capitalize;
+            display: inline-block;
+        }
+
+        .status-pill.confirmed { background: #dcfce7; color: #166534; }
+        .status-pill.seated { background: #e0f2fe; color: #0369a1; }
+        .status-pill.completed { background: #f1f5f9; color: #475569; }
+        .status-pill.cancelled { background: #fee2e2; color: #991b1b; }
+
+        .btn-cancel-small {
+            padding: 6px 12px;
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-cancel-small:hover {
+            background: #dc2626;
+            color: white;
+        }
+
+        /* 20 Table Visual Overview */
+        .admin-tables-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+        }
+
+        .admin-table-item {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            background: #ffffff;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .admin-table-item.occupied {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .admin-table-item .num {
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .admin-table-item .zone {
+            font-size: 11px;
+            font-weight: 700;
+            color: #b45309;
+            margin: 2px 0 4px;
+            text-transform: uppercase;
+        }
+
+        .admin-table-item .cap {
+            font-size: 12px;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .admin-table-item .booked-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: #b45309;
+            margin-top: 6px;
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 6px;
+            display: block;
+        }
+
+        @media (max-width: 1100px) {
+            .admin-tables-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .admin-tables-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="admin-nav">
+        <div class="logo">
+            🍽️ DineEase <span>Admin Portal</span>
+        </div>
+
+        <div class="admin-nav-links">
+            <a href="reservations.html" class="btn-book-nav" target="_blank">➕ Make a Reservation</a>
+            <a href="index.html" target="_blank">🌐 Live Website</a>
+            <a href="login.html">Sign Out</a>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+
+        <!-- Top Header -->
+        <div class="admin-header">
+            <div>
+                <h1>Restaurant Management Dashboard</h1>
+                <p style="color: #64748b; font-size: 14px; margin-top: 4px;">
+                    Real-time monitoring of 20 dining tables & customer reservations in SQLite database.
+                </p>
+            </div>
+
+            <div class="db-badge">
+                <span class="pulse-dot"></span>
+                <span>SQLite DB: Connected (restaurant.db)</span>
+            </div>
+        </div>
+
+        <!-- 4 Stats Cards -->
+        <div class="stats-grid">
+
+            <div class="stat-box">
+                <div class="stat-icon icon-orange">🪑</div>
+                <div class="stat-details">
+                    <h3 id="statTotalTables">20</h3>
+                    <p>Total Dining Tables</p>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-icon icon-blue">📋</div>
+                <div class="stat-details">
+                    <h3 id="statTotalBookings">0</h3>
+                    <p>Total Bookings Recorded</p>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-icon icon-green">✅</div>
+                <div class="stat-details">
+                    <h3 id="statActiveBookings">0</h3>
+                    <p>Active / Confirmed Bookings</p>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-icon icon-purple">❌</div>
+                <div class="stat-details">
+                    <h3 id="statCancelled">0</h3>
+                    <p>Cancelled Bookings</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SECTION 1: MASTER RESERVATIONS LIST (PLACED DIRECTLY AT TOP) -->
+        <div class="card-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span>📑 Customer Reservations (SQLite Master Records)</span>
+                </div>
+
+                <!-- Toolbar Filters -->
+                <div class="toolbar">
+                    <input
+                        type="text"
+                        id="searchCustomer"
+                        placeholder="Search name, phone, email..."
+                        oninput="filterReservations()"
+                    >
+                    <select id="filterStatus" onchange="filterReservations()">
+                        <option value="">All Statuses</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="seated">Seated</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button type="button" class="btn-refresh" onclick="loadAdminData()">
+                        🔄 Refresh Data
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#ID</th>
+                            <th>Customer Name</th>
+                            <th>Contact</th>
+                            <th>Table Number & Zone</th>
+                            <th>Date & Time Slot</th>
+                            <th>Guests</th>
+                            <th>Notes</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reservationsTableBody">
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 30px; color: #94a3b8;">
+                                Loading reservations from SQLite database...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECTION 2: 20 TABLE VISUAL MATRIX -->
+        <div class="card-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span>🪑 20 Dining Tables Visual Grid</span>
+                </div>
+                <div style="font-size: 13px; color: #64748b;">
+                    Main Hall (8) • Window Bay (4) • Terrace Garden (4) • VIP Suites (4)
+                </div>
+            </div>
+
+            <div class="admin-tables-grid" id="adminTablesGrid">
+                <!-- Loaded dynamically from /api/tables -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let allReservations = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAdminData();
+            // Auto-refresh every 5 seconds so new bookings appear automatically!
+            setInterval(loadAdminData, 5000);
+        });
+
+        async function loadAdminData() {
+            try {
+                // 1. Fetch Stats
+                const statsRes = await fetch('/api/stats');
+                const statsData = await statsRes.json();
+                if (statsData.success) {
+                    document.getElementById('statTotalTables').textContent = statsData.stats.totalTables || 20;
+                    document.getElementById('statTotalBookings').textContent = statsData.stats.totalBookings || 0;
+                    document.getElementById('statActiveBookings').textContent = statsData.stats.confirmedBookings || 0;
+                    document.getElementById('statCancelled').textContent = statsData.stats.cancelledBookings || 0;
+                }
+
+                // 2. Fetch Reservations
+                const resRes = await fetch('/api/reservations');
+                const resData = await resRes.json();
+                if (resData.success) {
+                    allReservations = resData.reservations;
+                    filterReservations();
+                }
+
+                // 3. Fetch 20 Tables
+                const tablesRes = await fetch('/api/tables');
+                const tablesData = await tablesRes.json();
+                if (tablesData.success) {
+                    renderAdminTables(tablesData.tables, allReservations);
+                }
+
+            } catch (err) {
+                console.error('Failed to load admin data:', err);
+            }
+        }
+
+        function renderAdminTables(tables, reservations) {
+            const grid = document.getElementById('adminTablesGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            // Map active reservations to table numbers
+            const activeBookingsByTable = {};
+            (reservations || []).forEach(r => {
+                if (r.status === 'confirmed' || r.status === 'seated') {
+                    activeBookingsByTable[r.table_number] = r;
+                }
+            });
+
+            tables.forEach(t => {
+                const card = document.createElement('div');
+                const activeBooking = activeBookingsByTable[t.table_number];
+                const isOccupied = Boolean(activeBooking);
+
+                card.className = `admin-table-item ${isOccupied ? 'occupied' : ''}`;
+                card.innerHTML = `
+                    <div class="num">${t.table_name}</div>
+                    <div class="zone">${t.zone}</div>
+                    <div class="cap">👤 Up to ${t.capacity} Guests</div>
+                    ${isOccupied ? `
+                        <div class="booked-badge">
+                            🔴 Booked: ${escapeHtml(activeBooking.customer_name)}
+                        </div>
+                    ` : `
+                        <div style="font-size: 11px; color: #16a34a; font-weight: 700; margin-top: 6px;">
+                            🟢 Available
+                        </div>
+                    `}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterReservations() {
+            const search = (document.getElementById('searchCustomer').value || '').toLowerCase();
+            const status = document.getElementById('filterStatus').value;
+
+            const filtered = allReservations.filter(r => {
+                const matchesSearch = !search ||
+                    r.customer_name.toLowerCase().includes(search) ||
+                    r.customer_email.toLowerCase().includes(search) ||
+                    r.customer_phone.includes(search);
+
+                const matchesStatus = !status || r.status === status;
+
+                return matchesSearch && matchesStatus;
+            });
+
+            renderReservationsTable(filtered);
+        }
+
+        function renderReservationsTable(reservations) {
+            const tbody = document.getElementById('reservationsTableBody');
+            if (!tbody) return;
+
+            if (!reservations || reservations.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #94a3b8;">
+                            No reservations found. <a href="reservations.html" style="color: #b45309; font-weight: 700;">Click here to book a table</a>.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = reservations.map(r => `
+                <tr>
+                    <td><strong>#${r.id}</strong></td>
+                    <td>
+                        <strong style="color: #0f172a; font-size: 15px;">${escapeHtml(r.customer_name)}</strong>
+                    </td>
+                    <td>
+                        <div>📞 ${escapeHtml(r.customer_phone)}</div>
+                        <div style="font-size: 12px; color: #64748b;">✉️ ${escapeHtml(r.customer_email)}</div>
+                    </td>
+                    <td>
+                        <strong style="color: #b45309;">🍽️ Table ${r.table_number < 10 ? '0' + r.table_number : r.table_number}</strong>
+                        <div style="font-size: 12px; color: #64748b;">${r.zone || ''}</div>
+                    </td>
+                    <td>
+                        <div>📅 ${r.reservation_date}</div>
+                        <div style="font-size: 12px; color: #b45309; font-weight: 700;">⏰ ${r.reservation_time}</div>
+                    </td>
+                    <td><strong>👤 ${r.guests_count} Guests</strong></td>
+                    <td>
+                        <span style="font-size: 12px; color: #64748b;">
+                            ${r.special_requests ? escapeHtml(r.special_requests) : '—'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-pill ${r.status}">${r.status}</span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <select
+                                style="padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;"
+                                onchange="updateStatus(${r.id}, this.value)"
+                            >
+                                <option value="confirmed" ${r.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                                <option value="seated" ${r.status === 'seated' ? 'selected' : ''}>Seated</option>
+                                <option value="completed" ${r.status === 'completed' ? 'selected' : ''}>Completed</option>
+                                <option value="cancelled" ${r.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                            ${r.status !== 'cancelled' ? `
+                                <button class="btn-cancel-small" onclick="cancelReservationAdmin(${r.id})">
+                                    Cancel
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function updateStatus(id, newStatus) {
+            try {
+                const res = await fetch(`/api/reservations/${id}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadAdminData();
+                } else {
+                    alert(data.error || 'Failed to update status');
+                }
+            } catch (err) {
+                alert('Network error updating status');
+            }
+        }
+
+        async function cancelReservationAdmin(id) {
+            if (!confirm(`Are you sure you want to cancel reservation #${id}?`)) return;
+
+            try {
+                const res = await fetch(`/api/reservations/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    loadAdminData();
+                } else {
+                    alert(data.error || 'Failed to cancel reservation');
+                }
+            } catch (err) {
+                alert('Network error cancelling reservation');
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+    </script>
+
+</body>
+</html>

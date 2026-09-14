@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | DineEase Restaurant</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 50px 20px;
+            background: linear-gradient(135deg, #fff7ed, #ffedd5);
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 450px;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(120, 53, 15, 0.15);
+        }
+
+        .login-logo {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: #b45309;
+            margin-bottom: 8px;
+        }
+
+        .login-box h1 {
+            text-align: center;
+            margin-bottom: 8px;
+            color: #292524;
+        }
+
+        .login-description {
+            text-align: center;
+            color: #78716c;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .login-form-group {
+            margin-bottom: 18px;
+        }
+
+        .login-form-group label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 7px;
+            color: #292524;
+            font-size: 14px;
+        }
+
+        .login-form-group input {
+            width: 100%;
+            padding: 13px;
+            border: 1.5px solid #d6d3d1;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .login-form-group input:focus {
+            border-color: #b45309;
+            box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.12);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #b45309;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 5px;
+        }
+
+        .login-button:hover {
+            background: #92400e;
+        }
+
+        /* Demo Login Box */
+        .demo-login-box {
+            margin-top: 24px;
+            padding: 16px;
+            background: #fffaf5;
+            border: 1px dashed #fed7aa;
+            border-radius: 12px;
+        }
+
+        .demo-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: #b45309;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .demo-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .demo-btn {
+            flex: 1;
+            padding: 9px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid #fdba74;
+            background: white;
+            color: #b45309;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .demo-btn:hover {
+            background: #ffedd5;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #78716c;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            color: #b45309;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="login-page">
+
+        <div class="login-box">
+
+            <div class="login-logo">
+                🍽️ DineEase
+            </div>
+
+            <h1>Welcome Back</h1>
+            <p class="login-description">
+                Sign in to manage reservations or access the admin panel.
+            </p>
+
+            <form id="loginForm">
+
+                <div class="login-form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <input
+                        type="email"
+                        id="loginEmail"
+                        placeholder="Enter your email"
+                        required
+                    >
+                </div>
+
+                <div class="login-form-group">
+                    <label for="loginPassword">Password</label>
+                    <input
+                        type="password"
+                        id="loginPassword"
+                        placeholder="Enter your password"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="login-button">
+                    Sign In
+                </button>
+
+            </form>
+
+            <div class="demo-login-box">
+                <div class="demo-title">⚡ 1-Click Quick Demo Login</div>
+                <div class="demo-buttons">
+                    <button type="button" class="demo-btn" onclick="fillDemo('admin')">
+                        👑 Admin Portal
+                    </button>
+                    <button type="button" class="demo-btn" onclick="fillDemo('customer')">
+                        👤 Customer
+                    </button>
+                </div>
+            </div>
+
+            <a href="index.html" class="back-link">
+                ← Back to Home
+            </a>
+
+        </div>
+
+    </main>
+
+    <script src="js/script.js"></script>
+
+    <script>
+        function fillDemo(type) {
+            const emailInput = document.getElementById('loginEmail');
+            const passInput = document.getElementById('loginPassword');
+
+            if (type === 'admin') {
+                emailInput.value = 'admin@dineease.com';
+                passInput.value = 'admin123';
+            } else {
+                emailInput.value = 'guest@example.com';
+                passInput.value = 'guest123';
+            }
+        }
+    </script>
+
+</body>
+</html>
