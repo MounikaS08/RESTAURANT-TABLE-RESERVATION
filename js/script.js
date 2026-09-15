@@ -142,12 +142,40 @@ function initReservationPage() {
 
         try {
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span>Saving into SQLite Database...</span>';
+            submitBtn.innerHTML = '<span>Confirming Reservation...</span>';
 
-            const response = await fetch(`${API_BASE}/api/reservations`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+            let reservationData = null;
+
+            // 1. Try Backend API
+            try {
+                const response = await fetch(`${API_BASE}/api/reservations`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        phone,
+                        date,
+                        time,
+                        guests,
+                        table_number,
+                        special_requests
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        reservationData = data.reservation;
+                    }
+                }
+            } catch (backendErr) {
+                // Backend is offline or running on static host (GitHub Pages)
+            }
+
+            // 2. ClientDB Fallback if backend offline
+            if (!reservationData && window.clientDb) {
+                reservationData = window.clientDb.createReservation({
                     name,
                     email,
                     phone,
@@ -156,16 +184,11 @@ function initReservationPage() {
                     guests,
                     table_number,
                     special_requests
-                })
-            });
+                });
+            }
 
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                alert(`⚠️ Reservation Failed: ${data.error || 'Could not complete reservation.'}`);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnText;
-                fetchTablesWithAvailability();
+            if (!reservationData) {
+                alert('Could not complete reservation. Please try again.');
                 return;
             }
 
@@ -174,13 +197,13 @@ function initReservationPage() {
 
             // Show Confirmation
             alert(
-                `🎉 Reservation Confirmed in SQLite Database!\n\n` +
-                `Booking ID: #${data.reservation.id}\n` +
-                `Name: ${data.reservation.customer_name}\n` +
-                `Table: Table ${data.reservation.table_number < 10 ? '0' + data.reservation.table_number : data.reservation.table_number} (${data.reservation.table_name})\n` +
-                `Zone: ${data.reservation.zone}\n` +
-                `Date: ${data.reservation.reservation_date} | Time: ${data.reservation.reservation_time}\n` +
-                `Guests: ${data.reservation.guests_count}`
+                `🎉 Reservation Confirmed!\n\n` +
+                `Booking ID: #${reservationData.id}\n` +
+                `Name: ${reservationData.customer_name}\n` +
+                `Table: Table ${reservationData.table_number < 10 ? '0' + reservationData.table_number : reservationData.table_number} (${reservationData.table_name || 'Dining Table'})\n` +
+                `Zone: ${reservationData.zone || 'Main Dining'}\n` +
+                `Date: ${reservationData.reservation_date} | Time: ${reservationData.reservation_time}\n` +
+                `Guests: ${reservationData.guests_count}`
             );
 
             // Reset selection and refresh tables
@@ -195,7 +218,7 @@ function initReservationPage() {
 
         } catch (error) {
             console.error('Error submitting reservation:', error);
-            alert('Could not connect to the backend server. Please verify the server is running on port 3000.');
+            alert(`⚠️ Reservation: ${error.message || 'Please try selecting another table.'}`);
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalBtnText;
@@ -214,24 +237,37 @@ async function fetchTablesWithAvailability() {
     const date = dateInput ? dateInput.value : '';
     const time = timeSelect ? timeSelect.value : '';
 
-    let url = `${API_BASE}/api/tables`;
-    if (date && time) {
-        url += `?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
-    }
+    let loadedTables = null;
 
+    // 1. Try Backend API
     try {
+        let url = `${API_BASE}/api/tables`;
+        if (date && time) {
+            url += `?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
+        }
         const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.success && Array.isArray(data.tables)) {
-            currentTables = data.tables;
-            renderTables();
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && Array.isArray(data.tables)) {
+                loadedTables = data.tables;
+            }
         }
     } catch (err) {
-        console.error('Failed to load tables from backend:', err);
+        // Backend offline
+    }
+
+    // 2. ClientDB Fallback
+    if (!loadedTables && window.clientDb) {
+        loadedTables = window.clientDb.getTables(date, time);
+    }
+
+    if (loadedTables) {
+        currentTables = loadedTables;
+        renderTables();
+    } else {
         tablesGrid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; color: #dc2626; padding: 20px;">
-                Unable to connect to database. Please make sure the server is running at http://localhost:3000
+                Unable to load tables. Please check connection.
             </div>
         `;
     }
@@ -349,99 +385,118 @@ async function loadMyReservations() {
 
     listContainer.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 30px; color: #78716c;">
-            Fetching reservations from SQLite database...
+            Loading reservations...
         </div>
     `;
 
+    let reservationsList = null;
+
     try {
         const res = await fetch(`${API_BASE}/api/reservations?email=${encodeURIComponent(email)}`);
-        const data = await res.json();
-
-        if (!data.success || data.reservations.length === 0) {
-            listContainer.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #fffaf5; border-radius: 16px; border: 1px dashed #fed7aa;">
-                    <h3>No Reservations Found</h3>
-                    <p style="color: #78716c; margin-top: 6px;">We could not find any bookings for <strong>${escapeHtml(email)}</strong>.</p>
-                    <button
-                        onclick="switchSection('book')"
-                        style="margin-top: 15px; padding: 10px 22px; background: #b45309; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
-                        Book a Table Now
-                    </button>
-                </div>
-            `;
-            return;
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && Array.isArray(data.reservations)) {
+                reservationsList = data.reservations;
+            }
         }
-
-        listContainer.innerHTML = '';
-
-        data.reservations.forEach(r => {
-            const card = document.createElement('div');
-            card.className = 'res-card';
-            const isCancelled = r.status === 'cancelled';
-
-            card.innerHTML = `
-                <div class="res-card-header">
-                    <div class="res-card-table">🍽️ Table ${r.table_number < 10 ? '0' + r.table_number : r.table_number}</div>
-                    <span class="res-badge ${r.status}">${r.status}</span>
-                </div>
-
-                <div class="res-details">
-                    <div><strong>Zone:</strong> ${r.zone || 'Main Dining'}</div>
-                    <div><strong>Guests:</strong> ${r.guests_count} Guests</div>
-                    <div><strong>Date:</strong> 📅 ${r.reservation_date}</div>
-                    <div><strong>Time:</strong> ⏰ ${r.reservation_time}</div>
-                    <div><strong>Booked Under:</strong> ${escapeHtml(r.customer_name)}</div>
-                    <div><strong>Phone:</strong> ${escapeHtml(r.customer_phone)}</div>
-                </div>
-
-                ${r.special_requests ? `
-                    <div style="font-size: 13px; color: #78716c; margin-bottom: 14px; background: #f8fafc; padding: 8px 12px; border-radius: 8px;">
-                        <strong>Note:</strong> ${escapeHtml(r.special_requests)}
-                    </div>
-                ` : ''}
-
-                ${!isCancelled ? `
-                    <button class="cancel-btn" onclick="cancelReservationById(${r.id})">
-                        Cancel This Reservation
-                    </button>
-                ` : `
-                    <div style="text-align: center; font-size: 13px; color: #991b1b; font-weight: 700;">
-                        This reservation has been cancelled
-                    </div>
-                `}
-            `;
-
-            listContainer.appendChild(card);
-        });
-
     } catch (err) {
-        console.error('Error fetching reservations:', err);
+        // Backend offline
+    }
+
+    if (!reservationsList && window.clientDb) {
+        reservationsList = window.clientDb.getReservations({ email });
+    }
+
+    if (!reservationsList || reservationsList.length === 0) {
         listContainer.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; color: #dc2626; padding: 20px;">
-                Failed to load reservations from database.
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #fffaf5; border-radius: 16px; border: 1px dashed #fed7aa;">
+                <h3>No Reservations Found</h3>
+                <p style="color: #78716c; margin-top: 6px;">We could not find any bookings for <strong>${escapeHtml(email)}</strong>.</p>
+                <button
+                    onclick="switchSection('book')"
+                    style="margin-top: 15px; padding: 10px 22px; background: #b45309; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
+                    Book a Table Now
+                </button>
             </div>
         `;
+        return;
     }
+
+    listContainer.innerHTML = '';
+
+    reservationsList.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'res-card';
+        const isCancelled = r.status === 'cancelled';
+
+        card.innerHTML = `
+            <div class="res-card-header">
+                <div class="res-card-table">🍽️ Table ${r.table_number < 10 ? '0' + r.table_number : r.table_number}</div>
+                <span class="res-badge ${r.status}">${r.status}</span>
+            </div>
+
+            <div class="res-details">
+                <div><strong>Zone:</strong> ${r.zone || 'Main Dining'}</div>
+                <div><strong>Guests:</strong> ${r.guests_count} Guests</div>
+                <div><strong>Date:</strong> 📅 ${r.reservation_date}</div>
+                <div><strong>Time:</strong> ⏰ ${r.reservation_time}</div>
+                <div><strong>Booked Under:</strong> ${escapeHtml(r.customer_name)}</div>
+                <div><strong>Phone:</strong> ${escapeHtml(r.customer_phone)}</div>
+            </div>
+
+            ${r.special_requests ? `
+                <div style="font-size: 13px; color: #78716c; margin-bottom: 14px; background: #f8fafc; padding: 8px 12px; border-radius: 8px;">
+                    <strong>Note:</strong> ${escapeHtml(r.special_requests)}
+                </div>
+            ` : ''}
+
+            ${!isCancelled ? `
+                <button class="cancel-btn" onclick="cancelReservationById(${r.id})">
+                    Cancel This Reservation
+                </button>
+            ` : `
+                <div style="text-align: center; font-size: 13px; color: #991b1b; font-weight: 700;">
+                    This reservation has been cancelled
+                </div>
+            `}
+        `;
+
+        listContainer.appendChild(card);
+    });
 }
 
 // Cancel reservation by ID
 async function cancelReservationById(id) {
     if (!confirm(`Are you sure you want to cancel reservation #${id}?`)) return;
 
+    let cancelled = false;
+    let cancelMsg = '';
+
     try {
         const res = await fetch(`${API_BASE}/api/reservations/${id}`, { method: 'DELETE' });
-        const data = await res.json();
-
-        if (data.success) {
-            alert(data.message || 'Reservation cancelled successfully!');
-            loadMyReservations();
-            fetchTablesWithAvailability();
-        } else {
-            alert(`⚠️ Error: ${data.error || 'Failed to cancel reservation.'}`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+                cancelled = true;
+                cancelMsg = data.message;
+            }
         }
-    } catch (err) {
-        console.error('Error cancelling reservation:', err);
-        alert('Network error while cancelling reservation.');
+    } catch (err) {}
+
+    if (!cancelled && window.clientDb) {
+        const res = window.clientDb.cancelReservation(id);
+        if (res) {
+            cancelled = true;
+            cancelMsg = `Reservation #${id} for ${res.customer_name} has been cancelled.`;
+        }
+    }
+
+    if (cancelled) {
+        alert(cancelMsg || 'Reservation cancelled successfully!');
+        loadMyReservations();
+        fetchTablesWithAvailability();
+    } else {
+        alert('Could not cancel reservation. Please try again.');
     }
 }
 
@@ -463,6 +518,8 @@ function initLoginPage() {
             return;
         }
 
+        let userData = null;
+
         try {
             const res = await fetch(`${API_BASE}/api/login`, {
                 method: 'POST',
@@ -470,29 +527,41 @@ function initLoginPage() {
                 body: JSON.stringify({ email, password })
             });
 
-            const data = await res.json();
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) {
+                    userData = data.user;
+                }
+            }
+        } catch (err) {
+            // Backend unreachable
+        }
 
-            if (!res.ok || !data.success) {
-                alert(`⚠️ Login Failed: ${data.error || 'Invalid credentials'}`);
+        if (!userData && window.clientDb) {
+            try {
+                userData = window.clientDb.login(email, password);
+            } catch (authErr) {
+                alert(`⚠️ Login Failed: ${authErr.message}`);
                 return;
             }
+        }
 
-            localStorage.setItem('loggedIn', 'true');
-            localStorage.setItem('userEmail', data.user.email);
-            localStorage.setItem('userName', data.user.name);
-            localStorage.setItem('userRole', data.user.role);
+        if (!userData) {
+            alert('⚠️ Login Failed: Invalid credentials');
+            return;
+        }
 
-            alert(`Welcome, ${data.user.name}! (${data.user.role.toUpperCase()})`);
+        localStorage.setItem('loggedIn', 'true');
+        localStorage.setItem('userEmail', userData.email);
+        localStorage.setItem('userName', userData.name);
+        localStorage.setItem('userRole', userData.role);
 
-            if (data.user.role === 'admin') {
-                window.location.href = 'admin.html';
-            } else {
-                window.location.href = 'reservations.html';
-            }
+        alert(`Welcome, ${userData.name}! (${userData.role.toUpperCase()})`);
 
-        } catch (err) {
-            console.error('Login error:', err);
-            alert('Could not reach backend database for authentication.');
+        if (userData.role === 'admin') {
+            window.location.href = 'admin.html';
+        } else {
+            window.location.href = 'reservations.html';
         }
     });
 }

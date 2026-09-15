@@ -32,12 +32,16 @@ try {
     const tableById = dbOps.getTableById(1);
     assert(tableById && tableById.table_number === 1, `getTableById(1) returns Table 01`);
 
+    // Unique test date/time slot so tests can be run repeatedly without conflict
+    const testDate = `2099-05-${String(Math.floor(Math.random() * 25) + 1).padStart(2, '0')}`;
+    const testTime = '09:00 PM';
+
     // 4. getAvailableTables
-    const availTables = dbOps.getAvailableTables('2026-10-01', '08:00 PM');
+    const availTables = dbOps.getAvailableTables(testDate, testTime);
     assert(availTables.length === 20 && availTables.every(t => t.is_reserved === false), `getAvailableTables() marks all as unreserved for future slot`);
 
     // 5. isTableBooked before booking
-    const bookedBefore = dbOps.isTableBooked(7, '2026-10-01', '08:00 PM');
+    const bookedBefore = dbOps.isTableBooked(7, testDate, testTime);
     assert(bookedBefore === false, `isTableBooked(7) is initially false`);
 
     // 6. createReservation
@@ -45,8 +49,8 @@ try {
         name: 'Test Customer',
         email: 'test@example.com',
         phone: '9876543210',
-        date: '2026-10-01',
-        time: '08:00 PM',
+        date: testDate,
+        time: testTime,
         guests: 4,
         table_number: 7,
         special_requests: 'Anniversary'
@@ -54,7 +58,7 @@ try {
     assert(newRes && newRes.id && newRes.table_number === 7 && newRes.status === 'confirmed', `createReservation() successfully inserts reservation #${newRes?.id}`);
 
     // 7. isTableBooked after booking
-    const bookedAfter = dbOps.isTableBooked(7, '2026-10-01', '08:00 PM');
+    const bookedAfter = dbOps.isTableBooked(7, testDate, testTime);
     assert(bookedAfter === true, `isTableBooked(7) is now true after booking`);
 
     // 8. Double booking conflict check
@@ -64,8 +68,8 @@ try {
             name: 'Another Person',
             email: 'another@example.com',
             phone: '9123456780',
-            date: '2026-10-01',
-            time: '08:00 PM',
+            date: testDate,
+            time: testTime,
             guests: 4,
             table_number: 7
         });
@@ -91,7 +95,7 @@ try {
     assert(cancelledRes && cancelledRes.status === 'cancelled', `cancelReservation() cancels reservation`);
 
     // 13. Verify table is freed up after cancellation
-    const isBookedNow = dbOps.isTableBooked(7, '2026-10-01', '08:00 PM');
+    const isBookedNow = dbOps.isTableBooked(7, testDate, testTime);
     assert(isBookedNow === false, `Table 7 is free again after cancellation`);
 
     // 14. findUserByEmail & verifyUser

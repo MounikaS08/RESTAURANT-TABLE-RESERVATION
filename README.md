@@ -4,6 +4,16 @@ A full-stack restaurant table reservation web application with an **Express.js b
 
 ---
 
+## 🌐 Live Deployment & Links
+
+- 🚀 **Live Demo on GitHub Pages**: [https://mounikas08.github.io/RESTAURANT-TABLE-RESERVATION/](https://mounikas08.github.io/RESTAURANT-TABLE-RESERVATION/)
+- 👑 **Admin Portal Live**: [https://mounikas08.github.io/RESTAURANT-TABLE-RESERVATION/admin.html](https://mounikas08.github.io/RESTAURANT-TABLE-RESERVATION/admin.html)
+- 📅 **Book Tables Live**: [https://mounikas08.github.io/RESTAURANT-TABLE-RESERVATION/reservations.html](https://mounikas08.github.io/RESTAURANT-TABLE-RESERVATION/reservations.html)
+- 🔐 **Login Live**: [https://mounikas08.github.io/RESTAURANT-TABLE-RESERVATION/login.html](https://mounikas08.github.io/RESTAURANT-TABLE-RESERVATION/login.html)
+- ☁️ **Deploy to Render (Full-Stack Express + SQLite)**: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/MounikaS08/RESTAURANT-TABLE-RESERVATION)
+
+---
+
 ## ✨ Features
 
 - **20 Dining Tables Across 4 Zones**:
